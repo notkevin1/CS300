@@ -10,7 +10,6 @@ import random
 
 # --------------------- CONSTANTS ---------------------
 MOTOR = 18 # Connect servomotor to BCM 18
-DELAY = 0
 current_state = 'WAIT_FOR_BUTTON' # Program should begin with waiting for button press
 
 pi = pigpio.pi()
@@ -24,34 +23,45 @@ pi.set_mode(12, pigpio.INPUT)
 pi.set_pull_up_down(12, pigpio.PUD_UP)
 pi.set_glitch_filter(12, 200)
 
-# ------------- move_to_angle AND callback -------------
-
-def move_to_angle(degrees):
-    # move servo from -90 to 90 here
-    if (1000 <= degrees <= 2000):
-        if (1000 <= degrees <= 1500):
-            print"Moving servo motor between -90 and 0 degrees"
-        elif(1500 <= degrees <= 2000):
-            print"Moving servo motor between 0 and 90 degrees"
-        pi.set_servo_pulsewidth(MOTOR, degrees)
-        # time.sleep(DELAY)
+# ------------- functions + callback -------------
+def move_to_angle(pulseWidth):
+    """
+    pulseWidth ranges from 1000 to 2000
+    """
+    if (1000 <= pulseWidth <= 2000):
+        print"Servo motor pulse width: ", pulseWidth
+        # print"Given servo motor angle: ", degrees, "degrees"
+        pi.set_servo_pulsewidth(MOTOR, pulseWidth)
     else:
-        print("Invalid degree range! ")
+        print"Invalid degree range! "
+
+def to_pulseWidth(degrees):
+    """
+    degrees ranges from -90 to 90
+    """
+    print"\nGenerated servo motor angle: ", degrees, "degrees"
+
+    # PulseWidth = [(Max Pulse Width - Min Pulse Width) / 181] + Pulse Width @ 0 degrees
+    pulseWidth = ((degrees * (1000/181)) + 1500)
+    # print"Servo motor pulse width: ", pulseWidth
+    move_to_angle(pulseWidth)
 
 def my_callback(GPIO, level, tick):
     global current_state
     current_state = 'RANDOM_MOVE'
 
 # ------------------ MAIN LOOP --------------------
-
 try:
     while True:
         cb = pi.callback(12, pigpio.FALLING_EDGE, my_callback)
         if (current_state == 'RANDOM_MOVE'):
-            # print"Generating random value..."
-            move_to_angle(random.randint(1000, 2000))
+            # global degrees
+            degrees = random.randint(-90, 90)
+            # print"Generated servo motor angle: ", degrees, "degrees"
+            to_pulseWidth(degrees)
             current_state = 'WAIT_FOR_BUTTON'
 
 except KeyboardInterrupt:
+    cb.reset_tally()
     cb.cancel()
-    pi.stop()  
+    pi.stop()

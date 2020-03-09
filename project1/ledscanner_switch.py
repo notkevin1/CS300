@@ -12,6 +12,7 @@ LED3 = 25 # Connect LED3 to BCM 25
 LED4 = 16 # Connect LED4 to BCM 16
 LED5 = 20 # Connect LED5 to BCM 20
 LED6 = 21 # Connect LED6 to BCM 21
+BUTTON = 12 # Connect button to BCM 12
 
 current_state = 'STATE_1'
 direction = 0 # direction 0: STATE1 -> STATE2
@@ -24,9 +25,20 @@ GPIO.setup(LED3, GPIO.OUT, initial=GPIO.LOW)
 GPIO.setup(LED4, GPIO.OUT, initial=GPIO.LOW)
 GPIO.setup(LED5, GPIO.OUT, initial=GPIO.LOW)
 GPIO.setup(LED6, GPIO.OUT, initial=GPIO.LOW)
+GPIO.setup(BUTTON, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+# ------------- callback -------------
+def my_callback(channel):
+    global direction
+    if (direction == 0):
+        direction = 1
+    else:
+        direction = 0
 
 # ------------------ MAIN LOOP --------------------
-try:
+GPIO.add_event_detect(BUTTON, GPIO.FALLING, callback=my_callback, bouncetime=200)
+
+try:    
     while True:
         if (current_state == 'STATE_1'):
             GPIO.output(LED1, True)

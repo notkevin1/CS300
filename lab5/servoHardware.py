@@ -1,5 +1,5 @@
 # Kevin Um and Matt Boersma 
-# 07 March 2020
+# 13 March 2020
 # for CS300 at Calvin University
 # This program waits for a push button input and moves the servo to a random angle
 # between -90 to 90 degrees using a state machine, pigpio, and randint.
@@ -10,6 +10,7 @@ import random
 
 # --------------------- CONSTANTS ---------------------
 MOTOR = 18 # Connect servomotor to BCM 18
+BUTTON = 12 # Connect button to BCM 12
 current_state = 'WAIT_FOR_BUTTON' # Program should begin with waiting for button press
 
 pi = pigpio.pi()
@@ -19,9 +20,9 @@ if not pi.connected:
 pi.set_servo_pulsewidth(MOTOR, 0)
 
 # ------------- PIGPIO DECLARATIONS -------------
-pi.set_mode(12, pigpio.INPUT)
-pi.set_pull_up_down(12, pigpio.PUD_UP)
-pi.set_glitch_filter(12, 200)
+pi.set_mode(BUTTON, pigpio.INPUT)
+pi.set_pull_up_down(BUTTON, pigpio.PUD_UP)
+pi.set_glitch_filter(BUTTON, 200)
 
 # ------------- functions + callback -------------
 def move_to_angle(pulseWidth):
@@ -53,7 +54,7 @@ def my_callback(GPIO, level, tick):
 # ------------------ MAIN LOOP --------------------
 try:
     while True:
-        cb = pi.callback(12, pigpio.FALLING_EDGE, my_callback)
+        cb = pi.callback(BUTTON, pigpio.FALLING_EDGE, my_callback)
         if (current_state == 'RANDOM_MOVE'):
             # global degrees
             degrees = random.randint(-90, 90)
